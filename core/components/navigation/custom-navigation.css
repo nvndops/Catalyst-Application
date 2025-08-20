@@ -1,0 +1,108 @@
+.custom-nav .nav-search-input {
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  border-radius: 8px !important;
+  padding-left: 2.5rem !important;
+}
+
+.custom-nav .nav-search-icon,
+.custom-nav form > .flex > svg {
+  position: absolute;
+  left: 1rem;
+  top: 0.95rem;
+  color: rgba(0,0,0,0.45);
+}
+
+/* Hide the temporary verification marker used during development */
+.custom-nav .custom-nav-marker {
+  display: none;
+  pointer-events: none;
+}
+
+/* Mega menu overrides: keep dropdowns centered and constrained */
+.custom-nav .navigation-menu-content,
+.custom-nav [data-radix-navigation-menu-content],
+.custom-nav .NavigationMenuContent,
+.custom-nav [data-nav-megamenu] {
+  max-width: min(1100px, calc(100vw - 2rem)) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 100% !important;
+}
+
+/* Ensure header background is white like the screenshot */
+.custom-nav nav[role="navigation"],
+.custom-nav .Navigation-root {
+  background: #ffffff;
+}
+
+/* Ensure top-level links are centered and readable */
+.custom-nav ul > li > a {
+  padding: 0.6rem 1rem !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.01em;
+}
+
+/* Icon group spacing (search / account / cart) */
+.custom-nav .flex.items-center.justify-end > a,
+.custom-nav .flex.items-center.justify-end > button {
+  margin-left: 0.5rem;
+}
+
+/* Location icon styling: align it near the account icon on large screens */
+.custom-nav .custom-location {
+  position: absolute;
+  right: 5.25rem; /* nudged to sit left of cart/profile group */
+  top: 0.9rem; /* vertical alignment with icons */
+  background: transparent;
+  color: inherit;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-nav .custom-location:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* Responsive: slightly adjust position for narrow viewports */
+@media (max-width: 1024px) {
+  .custom-nav .custom-location {
+    right: 4rem;
+    top: 1.6rem;
+  }
+}
+
+/* Layout adjustments: make the nav content wrap into two rows on large screens
+   so we can show a centered search input on the first row and place the categories below. */
+@media (min-width: 1280px) {
+  /* Make the main nav row wrap so we can place the search on row 1 and categories on row 2 */
+  .custom-nav .items-center.justify-between {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Hide the first icon in the right icon group (search icon) when showing the desktop search bar */
+  .custom-nav .flex.items-center.justify-end > *:first-child {
+    display: none !important;
+  }
+
+  /* Force the nav links row to be full width and sit on its own line below the search */
+  .custom-nav .items-center.justify-between ul {
+    width: 100% !important;
+    order: 2;
+    margin-top: 0.5rem;
+    justify-content: center;
+    display: flex; /* ensure links are visible */
+  }
+
+  /* The search container should sit on the first row and be centered */
+  .custom-nav .custom-search-container {
+    order: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+  }
+}

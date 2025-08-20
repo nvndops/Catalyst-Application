@@ -317,14 +317,17 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
       onValueChange={() => setIsSearchOpen(false)}
       ref={ref}
     >
+      {/* Use a vertical layout so we can place the search in a top row and the links on a second row */}
       <div
         className={clsx(
-          'flex items-center justify-between gap-1 bg-[var(--nav-background,hsl(var(--background)))] py-2 pl-3 pr-2 transition-shadow @4xl:rounded-2xl @4xl:px-2 @4xl:pl-6 @4xl:pr-2.5',
+          'flex flex-col bg-[var(--nav-background,hsl(var(--background)))] transition-shadow @4xl:rounded-2xl @4xl:px-2 @4xl:pl-6 @4xl:pr-2.5',
           isFloating
             ? 'shadow-xl ring-1 ring-[var(--nav-floating-border,hsl(var(--foreground)/10%))]'
             : 'shadow-none ring-0',
         )}
       >
+        {/* Top row: mobile menu, logo, desktop search, icons */}
+        <div className="flex items-center justify-between gap-1 py-2 pl-3 pr-2">
         {/* Mobile Menu */}
         <Popover.Root onOpenChange={setIsMobileMenuOpen} open={isMobileMenuOpen}>
           <Popover.Anchor className="absolute left-0 right-0 top-full" />
@@ -424,13 +427,8 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
           </Popover.Portal>
         </Popover.Root>
 
-        {/* Logo */}
-        <div
-          className={clsx(
-            'flex items-center justify-start self-stretch',
-            linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
-          )}
-        >
+  {/* Logo */}
+  <div className={clsx('flex items-center justify-start self-stretch @4xl:flex-none')}>
           <Logo
             className={clsx(streamableMobileLogo != null ? 'hidden @4xl:flex' : 'flex')}
             height={logoHeight}
@@ -451,17 +449,124 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
           )}
         </div>
 
-        {/* Top Level Nav Links */}
-        <ul
-          className={clsx(
-            'hidden gap-1 @4xl:flex @4xl:flex-1',
-            {
-              left: '@4xl:justify-start',
-              center: '@4xl:justify-center',
-              right: '@4xl:justify-end',
-            }[linksPosition],
+        {/* Centered desktop search (middle column) */}
+        <div className="hidden @4xl:flex flex-1 justify-center">
+          <div className="w-full max-w-[820px]">
+            {searchAction ? (
+              <SearchForm
+                searchAction={searchAction}
+                searchHref={searchHref}
+                searchInputPlaceholder={searchInputPlaceholder}
+                searchParamName={searchParamName}
+                searchSubmitLabel={searchSubmitLabel}
+              />
+            ) : null}
+          </div>
+        </div>
+
+        {/* Icon Buttons (right side of top row) */}
+        <div className={clsx('flex items-center justify-end gap-0.5 transition-colors duration-300 @4xl:flex-none')}>
+          {searchAction ? (
+            <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
+              <Popover.Anchor className="absolute left-0 right-0 top-full" />
+              <Popover.Trigger asChild>
+                {/* keep small trigger for mobile but hide on large screens */}
+                <button
+                  aria-label={openSearchPopupLabel}
+                  className={clsx(navButtonClassName, '@4xl:hidden')}
+                  onPointerEnter={(e) => e.preventDefault()}
+                  onPointerLeave={(e) => e.preventDefault()}
+                  onPointerMove={(e) => e.preventDefault()}
+                >
+                  <Search size={20} strokeWidth={1} />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content className="max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2 @container data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+                  <div className="flex max-h-[inherit] flex-col rounded-2xl bg-[var(--nav-search-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
+                    <SearchForm
+                      searchAction={searchAction}
+                      searchHref={searchHref}
+                      searchInputPlaceholder={searchInputPlaceholder}
+                      searchParamName={searchParamName}
+                      searchSubmitLabel={searchSubmitLabel}
+                    />
+                  </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          ) : (
+            <Link aria-label={searchLabel} className={clsx(navButtonClassName, '@4xl:hidden')} href={searchHref}>
+              <Search size={20} strokeWidth={1} />
+            </Link>
           )}
-        >
+
+          <Link aria-label={accountLabel} className={navButtonClassName} href={accountHref}>
+            <User size={20} strokeWidth={1} />
+          </Link>
+          <Link aria-label={cartLabel} className={navButtonClassName} href={cartHref}>
+            <ShoppingBag size={20} strokeWidth={1} />
+            <Stream
+              fallback={
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-contrast-100 text-xs text-background" />
+              }
+              value={streamableCartCount}
+            >
+              {(cartCount) =>
+                cartCount != null &&
+                cartCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--nav-cart-count-background,hsl(var(--foreground)))] font-[family-name:var(--nav-cart-count-font-family,var(--font-family-body))] text-xs text-[var(--nav-cart-count-text,hsl(var(--background)))]">
+                    {cartCount}
+                  </span>
+                )
+              }
+            </Stream>
+          </Link>
+
+          {/* Locale / Language Dropdown */}
+          {locales && locales.length > 1 ? (
+            <LocaleSwitcher
+              activeLocaleId={activeLocaleId}
+              className="hidden @4xl:block"
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              locales={locales as [Locale, Locale, ...Locale[]]}
+            />
+          ) : null}
+
+          {/* Currency Dropdown */}
+          <Stream
+            fallback={null}
+            value={Streamable.all([streamableCurrencies, streamableActiveCurrencyId])}
+          >
+            {([currencies, activeCurrencyId]) =>
+              currencies && currencies.length > 1 && currencyAction ? (
+                <CurrencyForm
+                  action={currencyAction}
+                  activeCurrencyId={activeCurrencyId}
+                  className="hidden @4xl:block"
+                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                  currencies={currencies as [Currency, ...Currency[]]}
+                  switchCurrencyLabel={switchCurrencyLabel}
+                />
+              ) : null
+            }
+          </Stream>
+        </div>
+
+  </div>
+
+  {/* second row: top level nav links (desktop) */}
+        <div className="hidden @4xl:flex w-full">
+          <ul
+            className={clsx(
+              'mx-auto flex gap-1 w-full max-w-screen-2xl @4xl:flex-1',
+              {
+                left: 'justify-start',
+                center: 'justify-center',
+                right: 'justify-end',
+              }[linksPosition],
+            )}
+          >
           <Stream
             fallback={
               <ul className="flex min-h-[41px] animate-pulse flex-row items-center @4xl:gap-6 @4xl:p-2.5">
@@ -530,100 +635,10 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
               ))
             }
           </Stream>
-        </ul>
+  </ul>
+  </div>
 
-        {/* Icon Buttons */}
-        <div
-          className={clsx(
-            'flex items-center justify-end gap-0.5 transition-colors duration-300',
-            linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
-          )}
-        >
-          {searchAction ? (
-            <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
-              <Popover.Anchor className="absolute left-0 right-0 top-full" />
-              <Popover.Trigger asChild>
-                <button
-                  aria-label={openSearchPopupLabel}
-                  className={navButtonClassName}
-                  onPointerEnter={(e) => e.preventDefault()}
-                  onPointerLeave={(e) => e.preventDefault()}
-                  onPointerMove={(e) => e.preventDefault()}
-                >
-                  <Search size={20} strokeWidth={1} />
-                </button>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content className="max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2 @container data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-                  <div className="flex max-h-[inherit] flex-col rounded-2xl bg-[var(--nav-search-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
-                    <SearchForm
-                      searchAction={searchAction}
-                      searchHref={searchHref}
-                      searchInputPlaceholder={searchInputPlaceholder}
-                      searchParamName={searchParamName}
-                      searchSubmitLabel={searchSubmitLabel}
-                    />
-                  </div>
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-          ) : (
-            <Link aria-label={searchLabel} className={navButtonClassName} href={searchHref}>
-              <Search size={20} strokeWidth={1} />
-            </Link>
-          )}
-
-          <Link aria-label={accountLabel} className={navButtonClassName} href={accountHref}>
-            <User size={20} strokeWidth={1} />
-          </Link>
-          <Link aria-label={cartLabel} className={navButtonClassName} href={cartHref}>
-            <ShoppingBag size={20} strokeWidth={1} />
-            <Stream
-              fallback={
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-contrast-100 text-xs text-background" />
-              }
-              value={streamableCartCount}
-            >
-              {(cartCount) =>
-                cartCount != null &&
-                cartCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--nav-cart-count-background,hsl(var(--foreground)))] font-[family-name:var(--nav-cart-count-font-family,var(--font-family-body))] text-xs text-[var(--nav-cart-count-text,hsl(var(--background)))]">
-                    {cartCount}
-                  </span>
-                )
-              }
-            </Stream>
-          </Link>
-
-          {/* Locale / Language Dropdown */}
-          {locales && locales.length > 1 ? (
-            <LocaleSwitcher
-              activeLocaleId={activeLocaleId}
-              className="hidden @4xl:block"
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              locales={locales as [Locale, Locale, ...Locale[]]}
-            />
-          ) : null}
-
-          {/* Currency Dropdown */}
-          <Stream
-            fallback={null}
-            value={Streamable.all([streamableCurrencies, streamableActiveCurrencyId])}
-          >
-            {([currencies, activeCurrencyId]) =>
-              currencies && currencies.length > 1 && currencyAction ? (
-                <CurrencyForm
-                  action={currencyAction}
-                  activeCurrencyId={activeCurrencyId}
-                  className="hidden @4xl:block"
-                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                  currencies={currencies as [Currency, ...Currency[]]}
-                  switchCurrencyLabel={switchCurrencyLabel}
-                />
-              ) : null
-            }
-          </Stream>
-        </div>
+  
       </div>
 
       <div className="perspective-[2000px] absolute left-0 right-0 top-full z-50 flex w-full justify-center">
@@ -635,11 +650,15 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
 
 Navigation.displayName = 'Navigation';
 
+// Provide a named alias so other components can import the custom navigation
+// using the same `CustomNavigation` symbol used elsewhere in the codebase.
+export const CustomNavigation = Navigation;
+
 function SearchForm<S extends SearchResult>({
   searchAction,
   searchParamName = 'query',
   searchHref = '/search',
-  searchInputPlaceholder = 'Search Products',
+  searchInputPlaceholder = 'Search by product name, ID, SKU or description...',
   searchSubmitLabel = 'Submit',
 }: {
   searchAction: SearchAction<S>;
@@ -688,16 +707,18 @@ function SearchForm<S extends SearchResult>({
     <>
       <form
         action={searchHref}
-        className="flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4"
+        className="flex items-center gap-3 h-[48px] w-[720px] rounded-[4px] pt-[12px] pr-[16px] pb-[12px] pl-[16px] border border-[#CED0D1] border-contrast-200"
         onSubmit={handleSubmit}
       >
         <SearchIcon
-          className="hidden shrink-0 text-[var(--nav-search-icon,hsl(var(--contrast-500)))] @xl:block"
+          className="hidden shrink-0 text-black @xl:block"
           size={20}
+          width={20}
+          height={20}
           strokeWidth={1}
         />
         <input
-          className="grow bg-transparent pl-2 text-lg font-medium outline-0 focus-visible:outline-none @xl:pl-0"
+          className="grow bg-transparent pl-2 text-lg font-medium outline-0 focus-visible:outline-none @xl:pl-0 placeholder:text-[14px] placeholder:font-[400] placeholder:text-[#A3A9AC] placeholder:contrast-300"
           name={searchParamName}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -707,7 +728,13 @@ function SearchForm<S extends SearchResult>({
           type="text"
           value={query}
         />
-        <SubmitButton loading={isPending} submitLabel={searchSubmitLabel} />
+        {query.trim() !== '' ? (
+          <SubmitButton
+            loading={isPending}
+            submitLabel={searchSubmitLabel}
+            className="w-[20px] h-[20px] p-0"
+          />
+        ) : null}
       </form>
 
       <SearchResults
@@ -723,14 +750,23 @@ function SearchForm<S extends SearchResult>({
   );
 }
 
-function SubmitButton({ loading, submitLabel }: { loading: boolean; submitLabel: string }) {
+function SubmitButton({
+  loading,
+  submitLabel,
+  className,
+}: {
+  loading: boolean;
+  submitLabel: string;
+  className?: string;
+}) {
   const { pending } = useFormStatus();
 
   return (
     <Button
+      className={className}
       loading={pending || loading}
       shape="circle"
-      size="small"
+      size="medium"
       type="submit"
       variant="secondary"
     >
